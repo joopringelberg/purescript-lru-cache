@@ -2,13 +2,13 @@ module Test.Main where
 
 import Control.Monad.Free (Free)
 import Data.Iterable (next)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), isJust)
 import Data.String (length)
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
 import Effect.Class (liftEffect)
-import Effect.Class.Console (log)
-import LRUCache (calculatedSize, clear, defaultCreateOptions, defaultGetOptions, defaultPeekOptions, delete, entries, get, has, keys, newCache, peek, rentries, rkeys, set, size, values)
+import Effect.Class.Console (log, logShow)
+import LRUCache (calculatedSize, clear, defaultCreateOptions, defaultGetOptions, defaultPeekOptions, delete, dump, entries, find, forEach, get, getRemainingTTL, has, keys, load, newCache, peek, purgeStale, rentries, rkeys, set, size, values, rforEach, pop)
 import Prelude (Unit, bind, discard, eq, not, show, ($))
 import Test.Unit (TestF, suite, test)
 import Test.Unit.Assert (assert)
@@ -161,3 +161,61 @@ theSuite = suite "LRU-basic" do
     assert "After first retrieving `1` and then `2`, the iterator returned by `values` then return (Tuple '2' 2)." (eq snd (Just (Tuple "2" 2)))
     thrd <- liftEffect $ next iterator
     assert "After first retrieving `1` and then `2`, the iterator returned by `values` should finally return nothing." (eq thrd Nothing)
+
+  test "find" do
+    c1 <- liftEffect (newCache defaultCreateOptions {ttl = 1000, updateAgeOnGet = true})
+    _ <- liftEffect $ set "1" 1 Nothing c1
+    _ <- liftEffect $ set "2" 2 Nothing c1
+    mResult <- liftEffect $ find (\v _ _ -> eq v 2) Nothing c1
+    assert "Should be able to find an item that was inserted in the cache" (eq mResult (Just 2))
+
+  test "dump and load" do
+    c1 <- liftEffect (newCache defaultCreateOptions {ttl = 1000, updateAgeOnGet = true})
+    _ <- liftEffect $ set "1" 1 Nothing c1
+    _ <- liftEffect $ set "2" 2 Nothing c1
+    contents <- liftEffect $ dump c1
+    _ <- liftEffect $ clear c1
+    c1' <- liftEffect $ load contents c1
+    s <- liftEffect $ size c1
+    assert "After dumping, clearing and reloading the cache should have the same number of elements" (eq s 2)
+  
+  test "purgeStale" do
+    c1 <- liftEffect (newCache defaultCreateOptions)
+    _ <- liftEffect $ set "1" 1 Nothing c1
+    _ <- liftEffect $ set "2" 2 Nothing c1
+    s <- liftEffect (purgeStale c1)
+    assert "PurgeStale should return false on a fresh cache." (not s)
+
+  test "getRemainingTTL" do
+    c1 <- liftEffect (newCache defaultCreateOptions)
+    _ <- liftEffect $ set "1" 1 Nothing c1
+    _ <- liftEffect $ set "2" 2 Nothing c1
+    s <- liftEffect (getRemainingTTL "1" c1)
+    assert "remainingTTL should return Nothing for items in a cache without TTL." (eq s Nothing)
+
+    c2 <- liftEffect (newCache defaultCreateOptions {ttl = 1000, updateAgeOnGet = true})
+    _ <- liftEffect $ set "1" 1 Nothing c2
+    s' <- liftEffect (getRemainingTTL "1" c2)
+    assert "remainingTTL should return Just for items in a cache without TTL." (isJust s')
+
+  test "forEach" do
+    c1 <- liftEffect (newCache defaultCreateOptions)
+    _ <- liftEffect $ set "1" 1 Nothing c1
+    _ <- liftEffect $ set "2" 2 Nothing c1
+    liftEffect $ forEach (\a _ _ -> logShow a) c1
+    assert "The console should show '2\n1'" true
+
+  test "rforEach" do
+    c1 <- liftEffect (newCache defaultCreateOptions)
+    _ <- liftEffect $ set "1" 1 Nothing c1
+    _ <- liftEffect $ set "2" 2 Nothing c1
+    liftEffect $ rforEach (\a _ _ -> logShow a) c1
+    assert "The console should show '1\n2'" true
+  
+  test "pop" do
+    c1 <- liftEffect (newCache defaultCreateOptions)
+    _ <- liftEffect $ set "1" 1 Nothing c1
+    mVal <- liftEffect $ pop c1
+    assert "Cache with at least one memeber should be able to pop it" (eq mVal (Just 1))
+    mVal2 <- liftEffect $ pop c1
+    assert "Cache without members should pop nothing" (eq mVal2 Nothing)

@@ -20,6 +20,14 @@ exports.uncurry2_ = function(f)
         }
 }
 
+exports.uncurry3_ = function(f)
+{
+    return function(a, b, c)
+        {
+            return f(a)(b)(c);
+        }
+}
+
 exports.newCache_ = 
     function (options)
     {
@@ -172,5 +180,79 @@ function( tuple, cache )
                     return n;
                 }
             }
+    }
+}
+
+exports.find_ = 
+function( criterium, options, nothing, just, cache )
+{
+    const r = cache.find( criterium, options );
+    if (r)
+    {
+        return just(r);
+    }
+    else
+    {
+        return nothing;
+    }
+}
+
+exports.dump_ = 
+function( cache )
+{
+    return cache.dump();
+}
+
+exports.load_ =
+function( keysAndVals, cache )
+{
+    return cache.load( keysAndVals );
+}
+
+exports.purgeStale_ = 
+function( cache )
+{
+    return cache.purgeStale();
+}
+
+exports.getRemainingTTL_ = 
+function( key, nothing, just, cache )
+{
+    const r = cache.getRemainingTTL( key );
+    if (r === Infinity)
+    {
+        return nothing;
+    }
+    else
+    {
+        return just(r);
+    }
+}
+
+exports.forEach_ = 
+function( fn, unit, cache)
+{
+    cache.forEach( (val, key, cache) => fn(val, key, cache)() );
+    return unit;
+}
+
+exports.rforEach_ = 
+function( fn, unit, cache)
+{
+    cache.rforEach( (val, key, cache) => fn(val, key, cache)() );
+    return unit;
+}
+
+exports.pop_ = 
+function( nothing, just, cache )
+{
+    const r = cache.pop();
+    if (r)
+    {
+        return just(r);
+    }
+    else
+    {
+        return nothing;
     }
 }
