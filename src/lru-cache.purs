@@ -50,6 +50,7 @@ module LRUCache
 
 import Prelude
 
+import Data.Function.Uncurried (Fn1, runFn1)
 import Data.Iterable (Iterator)
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
@@ -69,17 +70,17 @@ foreign import data Cache ∷ Type → Type
 
 type role Cache nominal
 
-foreign import newCache_ :: forall a. EffectFn1 Foreign (Cache a)
+foreign import newCache_ :: forall a. Fn1 Foreign (Cache a)
 
 -- | Create a new cache.
-newCache :: forall a. CreateOptions a -> Effect (Cache a)
+newCache :: forall a. CreateOptions a -> Cache a
 newCache options = let 
     (opts :: CreateOptions') = options 
         { sizeCalculation = unsafeCoerce $ uncurry2_ options.sizeCalculation
         , dispose = unsafeCoerce $ uncurry2_ <$> options.dispose 
         , disposeAfter = unsafeCoerce $ uncurry2_ <$> options.disposeAfter
         }
-    in runEffectFn1 newCache_ (write opts)
+    in runFn1 newCache_ (write opts)
 
 -------------------------------------------------------------------------------
 ---- OPTIONS

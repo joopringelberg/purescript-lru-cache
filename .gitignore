@@ -6,3 +6,7 @@ node_modules
 .psci
 output
 generated-docs
+
+# Various
+.psc-ide-port
+.purs-repl
