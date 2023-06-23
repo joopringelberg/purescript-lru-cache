@@ -16,6 +16,7 @@ module LRUCache
   ( Cache
   , CreateOptions
   , DisposeFunction
+  , Reason
   , Key
   , SetOptions
   , SizeCalculation
@@ -34,6 +35,7 @@ module LRUCache
   , has
   , keys
   , load
+  , logDisposal
   , newCache
   , peek
   , pop
@@ -76,8 +78,8 @@ foreign import newCache_ :: forall a. Fn1 Foreign (Cache a)
 newCache :: forall a. CreateOptions a -> Cache a
 newCache options = let 
     (opts :: CreateOptions') = options 
-        { sizeCalculation = unsafeCoerce $ uncurry2_ options.sizeCalculation
-        , dispose = unsafeCoerce $ uncurry2_ <$> options.dispose 
+        { sizeCalculation = unsafeCoerce $ uncurry2_ <$> options.sizeCalculation
+        , dispose = unsafeCoerce $ uncurry3_ <$> options.dispose 
         , disposeAfter = unsafeCoerce $ uncurry2_ <$> options.disposeAfter
         }
     in runFn1 newCache_ (write opts)
@@ -88,20 +90,20 @@ newCache options = let
 -- | CreateOptions to create a Cache with. See https://github.com/isaacs/node-lru-cache#options
 -- | for details.
 type CreateOptions a = 
-    { max :: Int
-    , maxSize :: Int
-    , sizeCalculation :: SizeCalculation a
+    { max :: Maybe Int
+    , maxSize :: Maybe Int
+    , sizeCalculation :: Maybe (SizeCalculation a)
     -- fetchMethod is not supported
     , dispose :: Maybe (DisposeFunction a)
     , disposeAfter :: Maybe (DisposeFunction a)
-    , noDisposeOnSet :: Boolean
-    , ttl :: Int
-    , noUpdateTTL :: Boolean
-    , ttlResolution :: Int
-    , ttlAutopurge :: Boolean
-    , allowStale :: Boolean
-    , updateAgeOnGet :: Boolean
-    , updateAgeOnHas :: Boolean
+    , noDisposeOnSet :: Maybe Boolean
+    , ttl :: Maybe Int
+    , noUpdateTTL :: Maybe Boolean
+    , ttlResolution :: Maybe Int
+    , ttlAutopurge :: Maybe Boolean
+    , allowStale :: Maybe Boolean
+    , updateAgeOnGet :: Maybe Boolean
+    , updateAgeOnHas :: Maybe Boolean
     }
 
 -- | At least one of 'max', 'ttl', or 'maxSize' is required, to prevent
@@ -110,48 +112,54 @@ type CreateOptions a =
 -- | the required memory allocation is done up-front.
 defaultCreateOptions :: forall a. CreateOptions a
 defaultCreateOptions = 
-    { max: 500
-    , maxSize: 500
-    , sizeCalculation: \_ _ -> 1
+    { max: Just 500
+    , maxSize: Nothing
+    , sizeCalculation: Nothing
     , dispose: Nothing
     , disposeAfter: Nothing
-    , noDisposeOnSet: false
-    , ttl: 0
-    , noUpdateTTL: false
-    , ttlResolution: 1
-    , ttlAutopurge: false
-    , allowStale: false
-    , updateAgeOnGet: false
-    , updateAgeOnHas: false
+    , noDisposeOnSet: Nothing
+    , ttl: Nothing
+    , noUpdateTTL: Nothing
+    , ttlResolution: Nothing
+    , ttlAutopurge: Nothing
+    , allowStale: Nothing
+    , updateAgeOnGet: Nothing
+    , updateAgeOnHas: Nothing
     }
 
 -- | Function to calculate the size of items.
 type SizeCalculation a = a -> Key -> Int
 
-type DisposeFunction a = a -> Key -> Unit
+type Reason = String
+type DisposeFunction a = a -> Key -> Reason -> Unit
 
 foreign import uncurry2_ :: forall a b c. (a -> b -> c) -> EffectFn2 a b c
 foreign import uncurry3_ :: forall a b c d. (a -> b -> c -> d) -> EffectFn3 a b c d
 
 -- 
 type CreateOptions' = 
-    { max :: Int
-    , maxSize :: Int
-    , sizeCalculation :: Foreign
+    { max :: Maybe Int
+    , maxSize :: Maybe Int
+    , sizeCalculation :: Maybe Foreign
     -- fetchMethod is not supported
     , dispose :: Maybe Foreign
     , disposeAfter :: Maybe Foreign
-    , noDisposeOnSet :: Boolean
-    , ttl :: Int
-    , noUpdateTTL :: Boolean
-    , ttlResolution :: Int
-    , ttlAutopurge :: Boolean
-    , allowStale :: Boolean
-    , updateAgeOnGet :: Boolean
-    , updateAgeOnHas :: Boolean
+    , noDisposeOnSet :: Maybe Boolean
+    , ttl :: Maybe Int
+    , noUpdateTTL :: Maybe Boolean
+    , ttlResolution :: Maybe Int
+    , ttlAutopurge :: Maybe Boolean
+    , allowStale :: Maybe Boolean
+    , updateAgeOnGet :: Maybe Boolean
+    , updateAgeOnHas :: Maybe Boolean
     }
 
 type Key = String 
+
+-------------------------------------------------------------------------------
+---- LOGGING DISPOSAL
+-------------------------------------------------------------------------------
+foreign import logDisposal :: forall a. DisposeFunction a
 
 -------------------------------------------------------------------------------
 ---- SET
@@ -170,9 +178,9 @@ foreign import set__ :: forall a. EffectFn3 Key a (Cache a) (Cache a)
 
 -- | Options to be provided to the set function.
 type SetOptions a = 
-    { size :: Int
-    , sizeCalculation :: SizeCalculation a
-    , ttl :: Int
+    { size :: Maybe Int
+    , sizeCalculation :: Maybe (SizeCalculation a)
+    , ttl :: Maybe Int
     , noDisposeOnSet :: Boolean
     }
 -------------------------------------------------------------------------------

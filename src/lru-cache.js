@@ -256,3 +256,15 @@ function( nothing, just, cache )
         return nothing;
     }
 }
+
+exports.logDisposal =
+function( item )
+{
+    return function( key )
+    {
+        return function( reason )
+            {
+                console.log( "Disposing of item with key " + key + " because: " + reason);
+            }
+    }
+}
