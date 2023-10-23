@@ -37,7 +37,7 @@ theSuite = suite "LRU-basic" do
     assert "Cache should report size 2 after adding two elements." (eq s 2)
 
   test "calculatedsize" do
-    c1 <- pure (newCache defaultCreateOptions {maxSize = 1000, sizeCalculation = \s _ -> length s})
+    c1 <- pure (newCache defaultCreateOptions {maxSize = Just 1000, sizeCalculation = Just \s _ -> length s})
     _ <- liftEffect $ set "1" "aap" Nothing c1
     _ <- liftEffect $ set "2" "noot" Nothing c1
     s <- liftEffect (calculatedSize c1)
@@ -57,7 +57,7 @@ theSuite = suite "LRU-basic" do
     has1 <- liftEffect $ has "1" {updateAgeOnHas: false} c1
     assert "has should return true on element added before" (eq has1 true)
     has2 <- liftEffect $ has "1" {updateAgeOnHas: false} c1
-    assert "has should return false on element never added" (eq has2 true)
+    assert "has should return false on element never added" (eq has2 true) 
 
   test "delete" do
     c1 <- pure (newCache defaultCreateOptions)
@@ -79,7 +79,7 @@ theSuite = suite "LRU-basic" do
     assert "Cache should report size 0 after clearing it." (eq s 0)
 
   test "keys" do
-    c1 <- pure (newCache defaultCreateOptions {ttl = 1000, updateAgeOnGet = true})
+    c1 <- pure (newCache defaultCreateOptions {ttl = Just 1000, updateAgeOnGet = Just true})
     _ <- liftEffect $ set "1" 1 Nothing c1
     _ <- liftEffect $ set "2" 2 Nothing c1
     _ <- liftEffect $ get "1" defaultGetOptions c1
@@ -93,7 +93,7 @@ theSuite = suite "LRU-basic" do
     assert "After first retrieving `1` and then `2`, the iterator returned by `keys` should first return `2` and then `1` and then nothing." (eq thrd Nothing)
 
   test "rkeys" do
-    c1 <- pure (newCache defaultCreateOptions {ttl = 1000, updateAgeOnGet = true})
+    c1 <- pure (newCache defaultCreateOptions {ttl = Just 1000, updateAgeOnGet = Just true})
     _ <- liftEffect $ set "1" 1 Nothing c1
     _ <- liftEffect $ set "2" 2 Nothing c1
     _ <- liftEffect $ get "1" defaultGetOptions c1
@@ -107,7 +107,7 @@ theSuite = suite "LRU-basic" do
     assert "After first retrieving `1` and then `2`, the iterator returned by `rkeys` should first return `1` and then `2` and then nothing." (eq thrd Nothing)
 
   test "values" do
-    c1 <- pure (newCache defaultCreateOptions {ttl = 1000, updateAgeOnGet = true})
+    c1 <- pure (newCache defaultCreateOptions {ttl = Just 1000, updateAgeOnGet = Just true})
     _ <- liftEffect $ set "1" 1 Nothing c1
     _ <- liftEffect $ set "2" 2 Nothing c1
     _ <- liftEffect $ get "1" defaultGetOptions c1
@@ -121,7 +121,7 @@ theSuite = suite "LRU-basic" do
     assert "After first retrieving `1` and then `2`, the iterator returned by `values` should first return 2 and then 1 and then nothing." (eq thrd Nothing)
 
   test "rvalues" do
-    c1 <- pure (newCache defaultCreateOptions {ttl = 1000, updateAgeOnGet = true})
+    c1 <- pure (newCache defaultCreateOptions {ttl = Just 1000, updateAgeOnGet = Just true})
     _ <- liftEffect $ set "1" 1 Nothing c1
     _ <- liftEffect $ set "2" 2 Nothing c1
     _ <- liftEffect $ get "1" defaultGetOptions c1
@@ -135,7 +135,7 @@ theSuite = suite "LRU-basic" do
     assert "After first retrieving `1` and then `2`, the iterator returned by `rvalues` should first return 1 and then 2 and then nothing." (eq thrd Nothing)
 
   test "entries" do
-    c1 <- pure (newCache defaultCreateOptions {ttl = 1000, updateAgeOnGet = true})
+    c1 <- pure (newCache defaultCreateOptions {ttl = Just 1000, updateAgeOnGet = Just true})
     _ <- liftEffect $ set "1" 1 Nothing c1
     _ <- liftEffect $ set "2" 2 Nothing c1
     _ <- liftEffect $ get "1" defaultGetOptions c1
@@ -149,7 +149,7 @@ theSuite = suite "LRU-basic" do
     assert "After first retrieving `1` and then `2`, the iterator returned by `values` should then return nothing." (eq thrd Nothing)
 
   test "rentries" do
-    c1 <- pure (newCache defaultCreateOptions {ttl = 1000, updateAgeOnGet = true})
+    c1 <- pure (newCache defaultCreateOptions {ttl = Just 1000, updateAgeOnGet = Just true})
     _ <- liftEffect $ set "1" 1 Nothing c1
     _ <- liftEffect $ set "2" 2 Nothing c1
     _ <- liftEffect $ get "1" defaultGetOptions c1
@@ -163,14 +163,14 @@ theSuite = suite "LRU-basic" do
     assert "After first retrieving `1` and then `2`, the iterator returned by `values` should finally return nothing." (eq thrd Nothing)
 
   test "find" do
-    c1 <- pure (newCache defaultCreateOptions {ttl = 1000, updateAgeOnGet = true})
+    c1 <- pure (newCache defaultCreateOptions {ttl = Just 1000, updateAgeOnGet = Just true})
     _ <- liftEffect $ set "1" 1 Nothing c1
     _ <- liftEffect $ set "2" 2 Nothing c1
     mResult <- liftEffect $ find (\v _ _ -> eq v 2) Nothing c1
     assert "Should be able to find an item that was inserted in the cache" (eq mResult (Just 2))
 
   test "dump and load" do
-    c1 <- pure (newCache defaultCreateOptions {ttl = 1000, updateAgeOnGet = true})
+    c1 <- pure (newCache defaultCreateOptions {ttl = Just 1000, updateAgeOnGet = Just true})
     _ <- liftEffect $ set "1" 1 Nothing c1
     _ <- liftEffect $ set "2" 2 Nothing c1
     contents <- liftEffect $ dump c1
@@ -193,7 +193,7 @@ theSuite = suite "LRU-basic" do
     s <- liftEffect (getRemainingTTL "1" c1)
     assert "remainingTTL should return Nothing for items in a cache without TTL." (eq s Nothing)
 
-    c2 <- pure (newCache defaultCreateOptions {ttl = 1000, updateAgeOnGet = true})
+    c2 <- pure (newCache defaultCreateOptions {ttl = Just 1000, updateAgeOnGet = Just true})
     _ <- liftEffect $ set "1" 1 Nothing c2
     s' <- liftEffect (getRemainingTTL "1" c2)
     assert "remainingTTL should return Just for items in a cache without TTL." (isJust s')

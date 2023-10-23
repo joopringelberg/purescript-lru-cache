@@ -8,5 +8,6 @@ output
 generated-docs
 
 # Various
-.psc-ide-port
+./psc-ide-port
 .purs-repl
+./package-lock.json
