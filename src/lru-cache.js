@@ -1,4 +1,4 @@
-const LRU = require('lru-cache');
+const {LRUCache} = require('lru-cache');
 
 // exports.uncurry2_ = function(f)
 // {
@@ -31,7 +31,7 @@ exports.uncurry3_ = function(f)
 exports.newCache_ = 
     function (options)
     {
-        return new LRU( options );
+        return new LRUCache( options );
     }
 
 //set(key, value, [{ size, sizeCalculation, ttl, noDisposeOnSet }])
