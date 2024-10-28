@@ -53,7 +53,7 @@ module LRUCache
 import Prelude
 
 import Data.Function.Uncurried (Fn1, runFn1)
-import Data.Iterable (Iterator)
+import JS.Iterable (Iterable) 
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Effect (Effect)
@@ -265,55 +265,55 @@ foreign import clear_ :: forall a. EffectFn2 Unit (Cache a) Unit
 ---- KEYS
 -------------------------------------------------------------------------------
 -- | Return a generator yielding the keys in the cache, in order from most recently used to least recently used.
-keys :: forall a. Cache a -> Effect (Iterator String)
+keys :: forall a. Cache a -> Effect (Iterable String)
 keys cache = runEffectFn1 keys_ cache
 
-foreign import keys_ :: forall a. EffectFn1 (Cache a) (Iterator String)
+foreign import keys_ :: forall a. EffectFn1 (Cache a) (Iterable String)
 
 -------------------------------------------------------------------------------
 ---- RKEYS
 -------------------------------------------------------------------------------
 -- | Return a generator yielding the keys in the cache, in order from least recently used to most recently used.
-rkeys :: forall a. Cache a -> Effect (Iterator String)
+rkeys :: forall a. Cache a -> Effect (Iterable String)
 rkeys cache = runEffectFn1 rkeys_ cache
 
-foreign import rkeys_ :: forall a. EffectFn1 (Cache a) (Iterator String)
+foreign import rkeys_ :: forall a. EffectFn1 (Cache a) (Iterable String)
  
 -------------------------------------------------------------------------------
 ---- VALUES
 -------------------------------------------------------------------------------
 -- | Return a generator yielding the values in the cache, in order from most recently used to least recently used.
-values :: forall a. Cache a -> Effect (Iterator a)
+values :: forall a. Cache a -> Effect (Iterable a)
 values cache = runEffectFn1 values_ cache
 
-foreign import values_ :: forall a. EffectFn1 (Cache a) (Iterator a)
+foreign import values_ :: forall a. EffectFn1 (Cache a) (Iterable a)
 
 -------------------------------------------------------------------------------
 ---- RVALUES
 -------------------------------------------------------------------------------
 -- | Return a generator yielding the values in the cache, in order from least recently used to most recently used.
-rvalues :: forall a. Cache a -> Effect (Iterator a)
+rvalues :: forall a. Cache a -> Effect (Iterable a)
 rvalues cache = runEffectFn1 rvalues_ cache
 
-foreign import rvalues_ :: forall a. EffectFn1 (Cache a) (Iterator a)
+foreign import rvalues_ :: forall a. EffectFn1 (Cache a) (Iterable a)
 
 -------------------------------------------------------------------------------
 ---- ENTRIES
 -------------------------------------------------------------------------------
 -- | Return a generator yielding [key, value] pairs, in order from most recently used to least recently used.
-entries :: forall a. Cache a -> Effect (Iterator (Tuple Key a))
+entries :: forall a. Cache a -> Effect (Iterable (Tuple Key a))
 entries cache = runEffectFn2 entries_ Tuple cache
 
-foreign import entries_ :: forall a x y. EffectFn2 (x -> y -> Tuple x y) (Cache a) (Iterator (Tuple Key a))
+foreign import entries_ :: forall a x y. EffectFn2 (x -> y -> Tuple x y) (Cache a) (Iterable (Tuple Key a))
 
 -------------------------------------------------------------------------------
 ---- RENTRIES
 -------------------------------------------------------------------------------
 -- | Return a generator yielding [key, value] pairs, in order from most recently used to least recently used.
-rentries :: forall a. Cache a -> Effect (Iterator (Tuple Key a))
+rentries :: forall a. Cache a -> Effect (Iterable (Tuple Key a))
 rentries cache = runEffectFn2 rentries_ Tuple cache
 
-foreign import rentries_ :: forall a x y. EffectFn2 (x -> y -> Tuple x y) (Cache a) (Iterator (Tuple Key a))
+foreign import rentries_ :: forall a x y. EffectFn2 (x -> y -> Tuple x y) (Cache a) (Iterable (Tuple Key a))
 
 -------------------------------------------------------------------------------
 ---- FIND

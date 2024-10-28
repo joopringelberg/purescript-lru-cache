@@ -1,18 +1,6 @@
-const {LRUCache} = require('lru-cache');
+import { LRUCache } from 'lru-cache'
 
-// exports.uncurry2_ = function(f)
-// {
-//     return function(arg1)
-//     {
-//         return function(arg2)
-//             {
-//                 console.log("Applying f to " + arg1.toString() + " " + arg2.toString() + ", returns " + (f(arg1, arg2)).toString() );
-//                 return f(arg1, arg2);
-//             }
-//     }
-// }
-
-exports.uncurry2_ = function(f)
+export function uncurry2_(f)
 {
     return function(a, b)
         {
@@ -20,7 +8,7 @@ exports.uncurry2_ = function(f)
         }
 }
 
-exports.uncurry3_ = function(f)
+export function uncurry3_(f)
 {
     return function(a, b, c)
         {
@@ -28,29 +16,25 @@ exports.uncurry3_ = function(f)
         }
 }
 
-exports.newCache_ = 
-    function (options)
+export function newCache_ (options)
     {
         return new LRUCache( options );
     }
 
 //set(key, value, [{ size, sizeCalculation, ttl, noDisposeOnSet }])
-exports.set_ = 
-    function( key, value, cache, options)
+export function set_( key, value, cache, options)
     {
         return cache.set(key, value, options);
     }
 
 //set(key, value, [{ size, sizeCalculation, ttl, noDisposeOnSet }])
-exports.set__ = 
-function( key, value, cache)
+export function set__( key, value, cache)
 {
     return cache.set(key, value);
 }
 
 // get(key, { updateAgeOnGet, allowStale } = {}) => value
-exports.get_ = 
-function( key, options, nothing, just, cache )
+export function get_( key, options, nothing, just, cache )
 {
     const r = cache.get(key, options);
     if (r)
@@ -63,21 +47,18 @@ function( key, options, nothing, just, cache )
     }
 }
 
-exports.size_ = 
-function( cache )
+export function size_( cache )
 {
     return cache.size;
 }
 
-exports.calculatedSize_ = 
-function( cache )
+export function calculatedSize_( cache )
 {
     return cache.calculatedSize;
 }
 
 // peek(key, { allowStale } = {}) => value
-exports.peek_ = 
-function( key, options, nothing, just, cache )
+export function peek_( key, options, nothing, just, cache )
 {
     const r = cache.peek(key, options);
     if (r)
@@ -91,8 +72,7 @@ function( key, options, nothing, just, cache )
 }
 
 // has(key, { updateAgeOnHas } = {}) => Boolean
-exports.has_ = 
-function(key, options, cache)
+export function has_(key, options, cache)
 {
     const r = cache.has(key, options);
     if (r)
@@ -105,44 +85,37 @@ function(key, options, cache)
     }
 }
 
-exports.delete_ = 
-function(key, cache)
+export function delete_(key, cache)
 {
     return cache.delete(key);
 }
 
-exports.clear_ = 
-function(unit, cache)
+export function clear_(unit, cache)
 {
     cache.clear();
     return unit;
 }
 
-exports.keys_ =
-function(cache)
+export function keys_(cache)
 {
     return cache.keys();
 }
 
-exports.rkeys_ =
-function(cache)
+export function rkeys_(cache)
 {
     return cache.rkeys();
 }
 
-exports.values_ =
-function(cache)
+export function values_(cache)
 {
     return cache.values();
 }
-exports.rvalues_ =
-function(cache)
+export function rvalues_(cache)
 {
     return cache.rvalues();
 }
 
-exports.entries_ = 
-function( tuple, cache )
+export function entries_( tuple, cache )
 {
     const entryIterator = cache.entries();
     return {
@@ -162,8 +135,7 @@ function( tuple, cache )
     }
 }
 
-exports.rentries_ = 
-function( tuple, cache )
+export function rentries_( tuple, cache )
 {
     const entryIterator = cache.rentries();
     return {
@@ -183,8 +155,7 @@ function( tuple, cache )
     }
 }
 
-exports.find_ = 
-function( criterium, options, nothing, just, cache )
+export function find_( criterium, options, nothing, just, cache )
 {
     const r = cache.find( criterium, options );
     if (r)
@@ -197,26 +168,22 @@ function( criterium, options, nothing, just, cache )
     }
 }
 
-exports.dump_ = 
-function( cache )
+export function dump_( cache )
 {
     return cache.dump();
 }
 
-exports.load_ =
-function( keysAndVals, cache )
+export function load_( keysAndVals, cache )
 {
     return cache.load( keysAndVals );
 }
 
-exports.purgeStale_ = 
-function( cache )
+export function purgeStale_( cache )
 {
     return cache.purgeStale();
 }
 
-exports.getRemainingTTL_ = 
-function( key, nothing, just, cache )
+export function getRemainingTTL_( key, nothing, just, cache )
 {
     const r = cache.getRemainingTTL( key );
     if (r === Infinity)
@@ -229,22 +196,19 @@ function( key, nothing, just, cache )
     }
 }
 
-exports.forEach_ = 
-function( fn, unit, cache)
+export function forEach_( fn, unit, cache)
 {
     cache.forEach( (val, key, cache) => fn(val, key, cache)() );
     return unit;
 }
 
-exports.rforEach_ = 
-function( fn, unit, cache)
+export function rforEach_( fn, unit, cache)
 {
     cache.rforEach( (val, key, cache) => fn(val, key, cache)() );
     return unit;
 }
 
-exports.pop_ = 
-function( nothing, just, cache )
+export function pop_( nothing, just, cache )
 {
     const r = cache.pop();
     if (r)
@@ -257,8 +221,7 @@ function( nothing, just, cache )
     }
 }
 
-exports.logDisposal =
-function( item )
+export function logDisposal( item )
 {
     return function( key )
     {

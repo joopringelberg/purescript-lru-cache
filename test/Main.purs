@@ -1,7 +1,9 @@
 module Test.Main where
 
 import Control.Monad.Free (Free)
-import Data.Iterable (next)
+import Control.Monad.ST as ST
+import Control.Monad.Trans.Class (lift)
+import JS.Iterator.ST (next, iterator)
 import Data.Maybe (Maybe(..), isJust)
 import Data.String (length)
 import Data.Tuple (Tuple(..))
@@ -9,7 +11,7 @@ import Effect (Effect)
 import Effect.Class (liftEffect)
 import Effect.Class.Console (log, logShow)
 import LRUCache (calculatedSize, clear, defaultCreateOptions, defaultGetOptions, defaultPeekOptions, delete, dump, entries, find, forEach, get, getRemainingTTL, has, keys, load, newCache, peek, purgeStale, rentries, rkeys, set, size, values, rforEach, pop)
-import Prelude (Unit, bind, discard, eq, not, pure, show, ($))
+import Prelude (Unit, bind, discard, eq, not, pure, show, ($), (<$>), (>>=))
 import Test.Unit (TestF, suite, test)
 import Test.Unit.Assert (assert)
 import Test.Unit.Main (runTest)
@@ -84,13 +86,17 @@ theSuite = suite "LRU-basic" do
     _ <- liftEffect $ set "2" 2 Nothing c1
     _ <- liftEffect $ get "1" defaultGetOptions c1
     _ <- liftEffect $ get "2" defaultGetOptions c1
-    iterator <- liftEffect $ keys c1
-    fst <- liftEffect $ next iterator
-    assert "After first retrieving `1` and then `2`, the iterator returned by `keys` should first return `2`." (eq fst (Just "2"))
-    snd <- liftEffect $ next iterator
-    assert "After first retrieving `1` and then `2`, the iterator returned by `keys` should first return `2` and then `1`." (eq snd (Just "1"))
-    thrd <- liftEffect $ next iterator
-    assert "After first retrieving `1` and then `2`, the iterator returned by `keys` should first return `2` and then `1` and then nothing." (eq thrd Nothing)
+    keys' <- liftEffect $ keys c1
+    {fst, snd, thrd} <- pure $ ST.run do
+      -- At this level of indentation, we are in the ST monadic context.
+      iter <- iterator keys'
+      fst <- next iter
+      snd <- next iter
+      thrd <- next iter
+      pure {fst, snd, thrd}
+    (assert "After first retrieving `1` and then `2`, the iterator returned by `keys` should first return `2`." (eq fst (Just "2")))
+    (assert "After first retrieving `1` and then `2`, the iterator returned by `keys` should first return `2` and then `1`." (eq snd (Just "1")))
+    (assert "After first retrieving `1` and then `2`, the iterator returned by `keys` should first return `2` and then `1` and then nothing." (eq thrd Nothing))
 
   test "rkeys" do
     c1 <- pure (newCache defaultCreateOptions {ttl = Just 1000, updateAgeOnGet = Just true})
@@ -98,12 +104,16 @@ theSuite = suite "LRU-basic" do
     _ <- liftEffect $ set "2" 2 Nothing c1
     _ <- liftEffect $ get "1" defaultGetOptions c1
     _ <- liftEffect $ get "2" defaultGetOptions c1
-    iterator <- liftEffect $ rkeys c1
-    fst <- liftEffect $ next iterator
+    keys' <- liftEffect $ keys c1
+    {fst, snd, thrd} <- pure $ ST.run do
+      -- At this level of indentation, we are in the ST monadic context.
+      iter <- iterator keys'
+      fst <- next iter
+      snd <- next iter
+      thrd <- next iter
+      pure {fst, snd, thrd}
     assert "After first retrieving `1` and then `2`, the iterator returned by `rkeys` should first return `1`." (eq fst (Just "1"))
-    snd <- liftEffect $ next iterator
     assert "After first retrieving `1` and then `2`, the iterator returned by `rkeys` should first return `1` and then `2`." (eq snd (Just "2"))
-    thrd <- liftEffect $ next iterator
     assert "After first retrieving `1` and then `2`, the iterator returned by `rkeys` should first return `1` and then `2` and then nothing." (eq thrd Nothing)
 
   test "values" do
@@ -112,12 +122,16 @@ theSuite = suite "LRU-basic" do
     _ <- liftEffect $ set "2" 2 Nothing c1
     _ <- liftEffect $ get "1" defaultGetOptions c1
     _ <- liftEffect $ get "2" defaultGetOptions c1
-    iterator <- liftEffect $ values c1
-    fst <- liftEffect $ next iterator
+    values' <- liftEffect $ values c1
+    {fst, snd, thrd} <- pure $ ST.run do
+      -- At this level of indentation, we are in the ST monadic context.
+      iter <- iterator values'
+      fst <- next iter
+      snd <- next iter
+      thrd <- next iter
+      pure {fst, snd, thrd}
     assert "After first retrieving `1` and then `2`, the iterator returned by `values` should first return 2." (eq fst (Just 2))
-    snd <- liftEffect $ next iterator
     assert "After first retrieving `1` and then `2`, the iterator returned by `values` should first return 2 and then 1." (eq snd (Just 1))
-    thrd <- liftEffect $ next iterator
     assert "After first retrieving `1` and then `2`, the iterator returned by `values` should first return 2 and then 1 and then nothing." (eq thrd Nothing)
 
   test "rvalues" do
@@ -126,12 +140,16 @@ theSuite = suite "LRU-basic" do
     _ <- liftEffect $ set "2" 2 Nothing c1
     _ <- liftEffect $ get "1" defaultGetOptions c1
     _ <- liftEffect $ get "2" defaultGetOptions c1
-    iterator <- liftEffect $ rkeys c1
-    fst <- liftEffect $ next iterator
+    keys' <- liftEffect $ keys c1
+    {fst, snd, thrd} <- pure $ ST.run do
+      -- At this level of indentation, we are in the ST monadic context.
+      iter <- iterator keys'
+      fst <- next iter
+      snd <- next iter
+      thrd <- next iter
+      pure {fst, snd, thrd}
     assert "After first retrieving `1` and then `2`, the iterator returned by `rvalues` should first return 1." (eq fst (Just "1"))
-    snd <- liftEffect $ next iterator
     assert "After first retrieving `1` and then `2`, the iterator returned by `rvalues` should first return 1 and then 2." (eq snd (Just "2"))
-    thrd <- liftEffect $ next iterator
     assert "After first retrieving `1` and then `2`, the iterator returned by `rvalues` should first return 1 and then 2 and then nothing." (eq thrd Nothing)
 
   test "entries" do
@@ -140,12 +158,16 @@ theSuite = suite "LRU-basic" do
     _ <- liftEffect $ set "2" 2 Nothing c1
     _ <- liftEffect $ get "1" defaultGetOptions c1
     _ <- liftEffect $ get "2" defaultGetOptions c1
-    iterator <- liftEffect $ entries c1
-    fst <- liftEffect $ next iterator
+    entries' <- liftEffect $ entries c1
+    {fst, snd, thrd} <- pure $ ST.run do
+      -- At this level of indentation, we are in the ST monadic context.
+      iter <- iterator entries'
+      fst <- next iter
+      snd <- next iter
+      thrd <- next iter
+      pure {fst, snd, thrd}
     assert "After first retrieving `1` and then `2`, the iterator returned by `values` should first return (Tuple '2' 2)." (eq fst (Just (Tuple "2" 2)))
-    snd <- liftEffect $ next iterator
     assert "After first retrieving `1` and then `2`, the iterator returned by `values` should then return 2 and then (Tuple '1' 1)." (eq snd (Just (Tuple "1" 1)))
-    thrd <- liftEffect $ next iterator
     assert "After first retrieving `1` and then `2`, the iterator returned by `values` should then return nothing." (eq thrd Nothing)
 
   test "rentries" do
@@ -154,12 +176,16 @@ theSuite = suite "LRU-basic" do
     _ <- liftEffect $ set "2" 2 Nothing c1
     _ <- liftEffect $ get "1" defaultGetOptions c1
     _ <- liftEffect $ get "2" defaultGetOptions c1
-    iterator <- liftEffect $ rentries c1
-    fst <- liftEffect $ next iterator
+    rentries' <- liftEffect $ rentries c1
+    {fst, snd, thrd} <- pure $ ST.run do
+      -- At this level of indentation, we are in the ST monadic context.
+      iter <- iterator rentries'
+      fst <- next iter
+      snd <- next iter
+      thrd <- next iter
+      pure {fst, snd, thrd}
     assert "After first retrieving `1` and then `2`, the iterator returned by `values` should first return (Tuple '1' 1)." (eq fst (Just (Tuple "1" 1)))
-    snd <- liftEffect $ next iterator
     assert "After first retrieving `1` and then `2`, the iterator returned by `values` then return (Tuple '2' 2)." (eq snd (Just (Tuple "2" 2)))
-    thrd <- liftEffect $ next iterator
     assert "After first retrieving `1` and then `2`, the iterator returned by `values` should finally return nothing." (eq thrd Nothing)
 
   test "find" do
